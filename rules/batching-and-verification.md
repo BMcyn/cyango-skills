@@ -65,12 +65,6 @@ If a value did not stick, re-apply with a **single** **`update_entities`** call 
 
 Pass `gui` (and other fields) in **`overrides` on each row of `add_entities`**. The MCP server deep-merges `overrides.gui.currentValue` with per-type defaults. Get layout right at create time to avoid extra **`update_entities`** churn.
 
-## Non-GUI entities on create
-
-For primitives, lights, skybox/HDR, and other non-GUI payloads:
-
-- **`geometry.currentValue`**, **`material.currentValue`**, **`light.currentValue`**, **`skybox.currentValue`**, **`position` / `rotation` / `scale`**, etc. are **deep-merged** with MCP defaults — partial overrides no longer wipe sibling keys.
-- **`geometry.currentValue`** is **normalized** on create (and **`geometry.currentValue`** patches on **`update_entities`**) so radius-like fields favor **strings** and **`width` / `height`** favor **numbers**.
 ## Child ordering in `add_entities`
 
 Children render in the order they appear in the parent's children list. In flex layouts this is the visual order — a `flexDirection: "column"` panel with children added as `[Label, Question, Answers]` renders top-to-bottom in that sequence; add them as `[Answers, Label, Question]` and the buttons appear above the question text. The same principle extends to paint order, z-stacking, and any other context where sibling sequence is meaningful. Parents must always precede their children within a batch.

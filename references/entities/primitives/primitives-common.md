@@ -31,29 +31,6 @@ Dimensions are often **strings** (editor serializes through HTML-style attribute
 
 ---
 
-## MCP defaults and merge behavior (non-GUI)
-
-Create-time behavior in **`cyango-mcp-server`**:
-
-- **`geometry.currentValue`** is **deep-merged** with MCP defaults per entity type (patch wins over defaults at each leaf).
-- **`material.currentValue`**, **`position`**, **`rotation`**, **`scale`**, **`light`** (when applicable), and similar animation tracks are merged the same way — callers can pass **partial** `geometry` / `material` without losing sibling keys.
-- After merge, **`geometry.currentValue`** is **normalized**: radius-like fields are coerced to **strings** when passed as numbers; **`width`** / **`height`** are coerced to **numbers** when passed as numeric strings.
-
-### Base geometry template (`geometry.currentValue`)
-
-Before any primitive-specific template, MCP seeds every geometry-capable entity with defaults aligned with `defaultGeometry()` (radii `"0"`, unset segment counts `0`, etc.). Per **`PRIMITIVE_*`** type, MCP then applies an entity-type template (forces `primitive` enum and defaults such as **`PRIMITIVE_SPHERE`** → default `radius: "1"` only where the caller did not supply a radius).
-
-### Hybrid sizing contract
-
-- Prefer **`geometry.currentValue`** dimensions from story data — they persist in JSON and round-trip through MCP.
-- **`scale`** remains a reliable way to resize when the viewport or tooling leans on transforms; treat **`geometry`** + **`scale`** as complementary (document intent in complex builds).
-
-### `update_entities`
-
-Patches to **`geometry.currentValue`** run the same scalar normalization server-side before the editor receives them (helps string/number mixtures match shared expectations).
-
----
-
 ## Per-type notes
 
 | Type | `GeometryPrimitive` | Key geometry fields |

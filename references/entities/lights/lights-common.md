@@ -27,20 +27,6 @@ Not every field applies to every light type — see table below.
 
 ---
 
-## MCP defaults (create path)
-
-Lights use **`light.currentValue`** merged with MCP defaults (**caller overrides win**):
-
-| Entity type | Notes |
-|-------------|--------|
-| Generic `*_LIGHT` (except below) | Starts from default light track: `lightColor` `#FFFFFF`, `intensity` `1`, `decay` `0`, etc. |
-| **`AMBIENT_LIGHT`** | Merged with MCP defaults `lightColor` `#FFFFFF`, `intensity` `1`, `decay` `0`. **`position`** defaults to `[10,10,10]` unless **`overrides.position`** is set at create time. |
-| **`POINT_LIGHT`** | Merged with MCP defaults including **`decay: 2`**, **`distance: 0`**. |
-
-Sky / camera placement of lights is unchanged from shared semantics: point/spot use **position**; directional uses **rotation** for direction.
-
----
-
 ## Per-type notes
 
 | Type | Role | Relevant fields | Transform notes |
