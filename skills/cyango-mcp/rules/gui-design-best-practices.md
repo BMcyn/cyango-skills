@@ -20,6 +20,8 @@ For interactive panels **placed in the 3D environment** (not screen-following):
 
 If the panel also contains non-GUI entities, wrap the `GUI_CONTAINER` and those entities inside a `GROUP`.
 
+**Scale rule:** keep world-space `GUI_*` transforms at `scale.currentValue: [1, 1, 1]` unless the user explicitly asks for transform scaling. Size world GUI with `gui.currentValue.desktop.default.width` / `height`, not by micro-scaling the entity transform (for example, do **not** use `scale: [0.004, 0.004, 0.004]` to convert pixels to meters). The editor/runtime already interprets GUI layout units for the UIKit panel; transform scale should stay identity so hit targets, text readability, and later edits remain predictable.
+
 ---
 
 ## Viewport assumption
