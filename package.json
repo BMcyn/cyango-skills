@@ -1,19 +1,23 @@
 {
-    "name": "@cyango/skills",
-    "version": "1.0.0",
-    "description": "CLI to install Cyango agent skills",
-    "type": "module",
-    "bin": {
-      "cyango-skills": "./bin/install.js"
-    },
-    "dependencies": {
-      "degit": "^2.8.4"
-    },
-    "engines": {
-      "node": ">=18"
-    },
-    "files": [
-      "bin",
-      "skills"
-    ]
+  "name": "@cyango/skills",
+  "version": "1.0.0",
+  "description": "CLI to install Cyango agent skills",
+  "type": "module",
+  "bin": {
+    "cyango-skills": "bin/install.js"
+  },
+  "dependencies": {
+    "degit": "^2.8.4"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "files": [
+    "bin",
+    "skills"
+  ],
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
   }
+}
