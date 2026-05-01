@@ -3,7 +3,7 @@ name: cyango-mcp
 description: 'Cyango MCP: live editor via plural/batched tools. Use for scenes, GROUPs, GUI, 3D layout, actions, timelines, prefabs, navigation, bridge status/debugging, patch validation — or any Cyango MCP/bridge work. Infer from the ask even without "MCP". Batch writes, screen vs world GUI, breakpoints, schema-safe GUI values.'
 ---
 
-**@cyango-tools/skills version:** `1.0.7`
+**@cyango-tools/skills version:** `1.0.8`
 
 # Cyango MCP Skill
 
