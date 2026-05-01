@@ -1,11 +1,21 @@
 ---
 name: cyango-mcp
-description: 'Cyango MCP: live editor via batch tools. Use for scenes, GROUPs, GUI, 3D layout, actions, timelines, navigation — or any Cyango MCP/bridge work. Infer from the ask even without "MCP". Batch writes, screen vs world GUI, breakpoints, schema-safe GUI values.'
+description: 'Cyango MCP: live editor via plural/batched tools. Use for scenes, GROUPs, GUI, 3D layout, actions, timelines, prefabs, navigation, bridge status/debugging, patch validation — or any Cyango MCP/bridge work. Infer from the ask even without "MCP". Batch writes, screen vs world GUI, breakpoints, schema-safe GUI values.'
 ---
+
+**@cyango-tools/skills version:** `1.0.7`
 
 # Cyango MCP Skill
 
-Batch tools only: `add_entities`, `remove_entities`, `update_entities` for creates, removals, property patches.
+Use batch tools only. Entity writes go through `add_entities`, `remove_entities`, and `update_entities`; scene writes go through `add_scenes`, `remove_scenes`, and `update_scenes` when more than one scene is involved. `add_scene`, `remove_scene`, and `update_scene` are one-scene convenience wrappers that still use the batched MCP protocol internally.
+
+Helpful utility tools:
+
+- `bridge_status` — check editor connection, queue depth, pending commands, and protocol version before/after debugging bridge issues.
+- `validate_patch` — validate `propertyPath` and common GUI value mistakes before sending `update_entities`, `update_scene`, or `update_scenes`.
+- `instantiate_prefab` — instantiate an existing Studio prefab into a scene.
+
+Current MCP server write protocol is plural-only (v4): `addScenes`, `removeScenes`, `updateScenes`, `addEntities`, `removeEntities`, `updateEntities`. Do not rely on old single-write bridge commands such as `addEntity`, `removeEntity`, `addScene`, `removeScene`, `updateScene`, or `updateEntity`.
 
 ## Non-obvious rules
 
@@ -20,8 +30,8 @@ Batch tools only: `add_entities`, `remove_entities`, `update_entities` for creat
   | `GROUP` | Non-GUI / mixed 3D+GUI composites. | Yes |
 
 - **Desktop-first**: finish `desktop` first; `tablet`/`mobile` only when the user wants responsive. Breakpoints are override slots; runtime cascades per-property mobile→tablet→desktop. Tablet writes affect mobile inheritance — [gui-desktop-first.md](rules/gui-desktop-first.md).
-- **Batch writes (critical)**: use the fewest possible calls — batch by operation type (`add_entities` for creates, `remove_entities` for removals, `update_entities` with one `updates` array for patches). Fragmented sequences cause editor instability — [batching-and-verification.md](rules/batching-and-verification.md).
-- **Physics prerequisite**: if any entity in the change set has a `physics` block, ensure the scene has `physics.enabled: true` (and gravity set intentionally) via a batched `update_scene` before validating. Entity-level physics does not simulate when scene physics is off.
+- **Batch writes (critical)**: use the fewest possible calls — batch by operation type (`add_entities` for entity creates, `remove_entities` for entity removals, `update_entities` for entity patches; `add_scenes`, `remove_scenes`, `update_scenes` for multi-scene work). Fragmented sequences cause editor instability — [batching-and-verification.md](rules/batching-and-verification.md).
+- **Physics prerequisite**: if any entity in the change set has a `physics` block, ensure the scene has `physics.enabled: true` (and gravity set intentionally) via `update_scene` or `update_scenes` before validating. Entity-level physics does not simulate when scene physics is off.
 - **GUI — read [gui-properties.md](references/entities/gui/gui-properties.md) for every `GUI_*` in the change set**: check **[type defaults](references/entities/gui/gui-properties.md#type-defaults)** and field tables for every property you set or assume. MCP deep-merges `gui.currentValue`; unset keys still render via `GUI2D_*` JSX fallbacks — invisible in JSON/`get_entity`. Viewport ≠ JSON.
   - "Button" = `GUI_CONTAINER` + `GUI_TEXT`; default `overflow: scroll` → spurious scrollbars unless `visible`; default container **150×150** → surprise width if you only set height.
   - World-space GUI scale stays identity: use `scale.currentValue: [1, 1, 1]`; size panels/buttons with GUI `width`/`height`, not tiny transform scales like `[0.004, 0.004, 0.004]`.

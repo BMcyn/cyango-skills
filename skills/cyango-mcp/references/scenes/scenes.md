@@ -47,3 +47,24 @@ Use these strings for `sceneType`; compare with `get_story_state` / `get_scene` 
 ## GUI and 2D-style experiences
 
 For 2D-style content (quizzes, menus, overlays), use `TOUR_3D` and parent GUI under the scene's `GUI_SCREEN`.
+
+---
+
+## MCP scene tools
+
+Scene write tools use the MCP server's plural-only write protocol internally:
+
+| Task | Tool |
+|------|------|
+| Add one scene | `add_scene` |
+| Add multiple scenes | `add_scenes` |
+| Update one scene | `update_scene` |
+| Update multiple scenes/properties | `update_scenes` |
+| Remove one scene | `remove_scene` |
+| Remove multiple scenes | `remove_scenes` |
+| Read one scene | `get_scene` |
+| Read scene list | `list_scenes` |
+
+Prefer `update_scenes` when several scene patches can be bundled into one call. Each update item targets `sceneIds`, `propertyPath`, and `value`.
+
+Before scene update patches that touch GUI-like values or uncertain paths, call `validate_patch` with the intended `propertyPath`/`value` pairs. For bridge/connection issues, call `bridge_status` instead of repeatedly re-reading story state.

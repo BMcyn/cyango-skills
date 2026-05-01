@@ -11,7 +11,6 @@ MCP deep-merges these defaults when `add_entities` creates an entity. Keys you s
 | `position.currentValue` | `[0, 0, 0]` |
 | `rotation.currentValue` | `[0, 0, 0]` |
 | `scale.currentValue` | `[1, 1, 1]` |
-| `interactable.currentValue` | `false` |
 | `actions.currentValue` | `[]` |
 | `visibility.*` | all `false` / `[]` |
 | `layer` | `isLocked: false`, `duration: 0`, `isOpen: false` |

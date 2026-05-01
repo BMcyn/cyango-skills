@@ -1,19 +1,27 @@
 # Batching, writes, and verification
 
-Many separate create/remove/update operations can **crash the editor connection**. **Always** use the batch entity tools: **`add_entities`** for every create, **`remove_entities`** for every removal, and **`update_entities`** for property changes (one `updates` array per call; each item: `entityIds`, `propertyPath`, `value`).
+Many separate create/remove/update operations can **crash the editor connection**. **Always** use batch tools:
+
+- **Entity writes**: `add_entities`, `remove_entities`, `update_entities`.
+- **Scene writes**: `add_scenes`, `remove_scenes`, `update_scenes` for multi-scene work; `add_scene`, `remove_scene`, `update_scene` are one-scene convenience wrappers that still use batched bridge commands internally.
+
+The current MCP server bridge protocol is plural-only for writes (v4). Do not depend on old single-write bridge commands like `addEntity`, `removeEntity`, `addScene`, `removeScene`, `updateScene`, or `updateEntity`.
 
 ## Entity writes (required)
 
 - **Creates**: always **`add_entities`** — order parents before children; use `parentIndex` when the parent row is in the same batch.
 - **Removals**: always **`remove_entities`** — pass every target `entityId` in one call when they belong to the same scene.
-- **Scenes**: create scenes **one `add_scene` at a time** and wait for completion. Parallel or stacked `add_scene` / `add_scenes` calls have caused broken scenes.
-- **Property updates**: always **`update_entities`** — bundle every patch for the task into one call’s `updates` array (each patch can target different `entityIds`). Prefer setting layout and payloads via `overrides` on **`add_entities`** at create time so you need fewer follow-up updates.
+- **Scenes**: use **`add_scene`** for one scene, **`add_scenes`** for multiple scenes in the same planned scene batch, **`remove_scenes`** for multi-scene removals, and **`update_scenes`** for scene patches across more than one scene.
+- **Entity property updates**: always **`update_entities`** — bundle every patch for the task into one call’s `updates` array (each patch can target different `entityIds`). Prefer setting layout and payloads via `overrides` on **`add_entities`** at create time so you need fewer follow-up updates.
+- **Scene property updates**: use **`update_scene`** for one scene, or **`update_scenes`** when different scene IDs/properties can be patched together.
 
 ## Verification (debugging only)
 
 `get_entity` and `list_entities` are **not** required after every write. Use them when you suspect a value did not apply, an entity is missing, or you are debugging layout. The MCP **`add_entities`** / **`remove_entities`** tools already re-check existence against the editor and report `verified` / `fallbackUsed` in the response — agent-level re-verification after every batch duplicates that and adds latency.
 
 `{"success": true}` from the bridge still only means the editor accepted the command; if something looks wrong in the viewport, that is when to read state.
+
+Use **`bridge_status`** when debugging connection/queue problems, and **`validate_patch`** before writes when you are unsure about GUI paths or schema-safe values.
 
 ### Reference: what to check when debugging a suspected silent failure
 
