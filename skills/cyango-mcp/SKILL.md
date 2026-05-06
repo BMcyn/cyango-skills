@@ -15,7 +15,7 @@ Helpful utility tools:
 - `validate_patch` — validate `propertyPath` and common GUI value mistakes before sending `update_entities`, `update_scene`, or `update_scenes`.
 - `instantiate_prefab` — instantiate an existing Studio prefab into a scene.
 
-Current MCP server write protocol is plural-only (v4): `addScenes`, `removeScenes`, `updateScenes`, `addEntities`, `removeEntities`, `updateEntities`. Do not rely on old single-write bridge commands such as `addEntity`, `removeEntity`, `addScene`, `removeScene`, `updateScene`, or `updateEntity`.
+Current MCP server write protocol is plural-only (v5): `insertAssets`, `addScenes`, `removeScenes`, `updateScenes`, `addEntities`, `removeEntities`, `updateEntities`. Do not rely on old single-write bridge commands such as `addEntity`, `removeEntity`, `addScene`, `removeScene`, `updateScene`, or `updateEntity`.
 
 ## Non-obvious rules
 
@@ -31,6 +31,7 @@ Current MCP server write protocol is plural-only (v4): `addScenes`, `removeScene
 
 - **Desktop-first**: finish `desktop` first; `tablet`/`mobile` only when the user wants responsive. Breakpoints are override slots; runtime cascades per-property mobile→tablet→desktop. Tablet writes affect mobile inheritance — [gui-desktop-first.md](rules/gui-desktop-first.md).
 - **Batch writes (critical)**: use the fewest possible calls — batch by operation type (`add_entities` for entity creates, `remove_entities` for entity removals, `update_entities` for entity patches; `add_scenes`, `remove_scenes`, `update_scenes` for multi-scene work). Fragmented sequences cause editor instability — [batching-and-verification.md](rules/batching-and-verification.md).
+- **Assets via MCP**: use `list_assets` to discover story/library assets and `insert_assets` to place them into scenes. For library scope, pass `folderId`; for hierarchy in one insert batch use `parentIndex` like `add_entities`.
 - **Physics prerequisite**: if any entity in the change set has a `physics` block, ensure the scene has `physics.enabled: true` (and gravity set intentionally) via `update_scene` or `update_scenes` before validating. Entity-level physics does not simulate when scene physics is off.
 - **GUI — read [gui-properties.md](references/entities/gui/gui-properties.md) for every `GUI_*` in the change set**: check **[type defaults](references/entities/gui/gui-properties.md#type-defaults)** and field tables for every property you set or assume. MCP deep-merges `gui.currentValue`; unset keys still render via `GUI2D_*` JSX fallbacks — invisible in JSON/`get_entity`. Viewport ≠ JSON.
   - "Button" = `GUI_CONTAINER` + `GUI_TEXT`; default `overflow: scroll` → spurious scrollbars unless `visible`; default container **150×150** → surprise width if you only set height.
@@ -60,6 +61,7 @@ Every path is relative to this skill folder (`cyango-mcp/`).
 | [references/scenes/scenes.md](references/scenes/scenes.md) | **Open before scene create/edit/navigation work.** Source of truth for `sceneType` and scene fields. |
 | [references/actions/actions.md](references/actions/actions.md) | **Open before adding/editing actions.** Source of truth for `IAction`, `ActionType`, `EventType`, conditions, and MCP patch shape. |
 | [references/timeline/timeline.md](references/timeline/timeline.md) | **Open before timeline/media/keyframe work.** Source of truth for `ITimeline`, `IAnimation`, keyframes, and `IMediaClip`. |
+| [references/assets/assets-common.md](references/assets/assets-common.md) | **Open before listing/inserting/importing assets.** Source of truth for MCP asset workflows and asset→entity mapping. |
 
 ### Entity families (`references/entities/`)
 
