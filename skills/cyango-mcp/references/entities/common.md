@@ -64,6 +64,25 @@ Most "live" fields use `IAnimation<T>`: `currentValue` plus optional `keyframes`
 
 ---
 
+## Render order
+
+`renderOrder` is an optional top-level number on `IEntity`. Use it only when visual draw order needs an explicit override, for example overlapping transparent planes, GUI-in-world panels, hotspots, splats, or media surfaces.
+
+| Field | Role |
+|-------|------|
+| `renderOrder` | Three.js draw-order override. Higher finite numbers draw later within the same opaque/transparent render pass. |
+
+Important behavior:
+
+- Unset means "use the renderer's per-entity default"; do not write `0` unless the user explicitly wants to override the default.
+- Child entities inherit the nearest parent/group effective `renderOrder` unless the child sets its own finite value.
+- This does not change timeline stacking, GUI flex layout, or transform depth. Do not use it as a replacement for position/scale/layout.
+- In Studio, the editor control is in the Visibility section because it affects whether an entity visually appears above/below others.
+
+Use `update_entities` with `propertyPath: "renderOrder"` to set or clear it.
+
+---
+
 ## Other fields
 
 | Field | Notes |

@@ -13,6 +13,7 @@ MCP deep-merges these defaults when `add_entities` creates an entity. Keys you s
 | `scale.currentValue` | `[1, 1, 1]` |
 | `actions.currentValue` | `[]` |
 | `visibility.*` | all `false` / `[]` |
+| `renderOrder` | unset; renderer uses per-entity default and children inherit any parent override |
 | `layer` | `isLocked: false`, `duration: 0`, `isOpen: false` |
 
 ---
