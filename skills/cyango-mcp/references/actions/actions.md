@@ -118,7 +118,7 @@ Notes for `CENTER_GPS`:
 | Type | Description | Needs |
 |------|-------------|--------|
 | `DELAY` | Wait for a duration before subsequent steps. | `duration` |
-| `CUSTOM_CODE` | Run custom code (e.g. backend execution). | `customCode` |
+| `CUSTOM_CODE` | Run sandboxed story-player code with a `customCode` payload. Use the custom-code reference from `SKILL.md`; do not infer syntax from this table alone. | `customCode` |
 | `OPEN_PRODUCT` | Open an XR store product. | — |
 | `INSTANTIATE_PREFAB` | Instantiate a prefab; `entityProperties` can act as overrides. | `prefabId` |
 | `NONE` | No operation. | — |
