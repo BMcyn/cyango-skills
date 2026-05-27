@@ -1,6 +1,6 @@
 ---
 name: cyango-mcp
-description: 'Cyango MCP: live editor via plural/batched tools. Use for scenes, GROUPs, GUI, 3D layout, actions, custom code actions, story Head/Footer code, timelines, prefabs, navigation, bridge status/debugging, patch validation — or any Cyango MCP/bridge work. Infer from the ask even without "MCP". Batch writes, screen vs world GUI, breakpoints, schema-safe GUI values.'
+description: 'Cyango MCP: live editor via plural/batched tools. Use for scenes, GROUPs, GUI, 3D layout, actions, custom code actions, story Head/Footer code, timelines, prefabs, navigation, screenshots/visual feedback, bridge status/debugging, patch validation — or any Cyango MCP/bridge work. Infer from the ask even without "MCP". Batch writes, screen vs world GUI, breakpoints, schema-safe GUI values.'
 ---
 
 **@cyango-tools/skills version:** `1.0.12`
@@ -14,6 +14,7 @@ Helpful utility tools:
 - `bridge_status` — check editor connection, queue depth, pending commands, and protocol version before/after debugging bridge issues.
 - `validate_patch` — validate `propertyPath` and common GUI value mistakes before sending `update_entities`, `update_scene`, or `update_scenes`.
 - `instantiate_prefab` — instantiate an existing Studio prefab into a scene.
+- `capture_screenshot` — use after visual edits to inspect the live result. Default `mode: "viewport"` captures the 3D canvas; `mode: "editor"` captures full editor UI. Use `shots` (max 6) for multiple angles.
 
 Current MCP server write protocol is plural-only (v6): `insertAssets`, `addScenes`, `removeScenes`, `updateScenes`, `addEntities`, `removeEntities`, `updateEntities`. Do not rely on old single-write bridge commands such as `addEntity`, `removeEntity`, `addScene`, `removeScene`, `updateScene`, or `updateEntity`.
 
@@ -32,6 +33,7 @@ Current MCP server write protocol is plural-only (v6): `insertAssets`, `addScene
 
 - **Desktop-first**: finish `desktop` first; `tablet`/`mobile` only when the user wants responsive. Breakpoints are override slots; runtime cascades per-property mobile→tablet→desktop. Tablet writes affect mobile inheritance — [gui-desktop-first.md](rules/gui-desktop-first.md).
 - **Batch writes (critical)**: use the fewest possible calls — batch by operation type (`add_entities` for entity creates, `remove_entities` for entity removals, `update_entities` for entity patches; `add_scenes`, `remove_scenes`, `update_scenes` for multi-scene work). Fragmented sequences cause editor instability — [batching-and-verification.md](rules/batching-and-verification.md).
+- **Screenshot feedback loop**: after scene/GUI/layout edits, call `capture_screenshot` before declaring success. Use default viewport for agent visual feedback; use `mode: "editor"` only when sidebars/inspector/docs context matters. For world-space checks, pass `position`/`target` in `shots`; for screen-glued `GUI_SCREEN`, default viewport uses the editor camera so the overlay appears.
 - **Assets via MCP**: use `list_assets` to discover story/library assets, `insert_assets` to place existing assets, and `upload_assets` to import from `path`/`url`/`directory`. For library scope, pass `folderId`; for hierarchy in one insert batch use `parentIndex` like `add_entities`. `insert` on a multi-file upload applies the same transform to every asset; omit it and follow with `insert_assets` when per-asset placement matters, or one shared `insert` then `update_entities` per spawned entity for placement.
 - **`FLAT_IMAGE` / `FLAT_VIDEO` — flat scenes only**: these entity types belong **only inside flat scenes** (do not expand into a scene-type tutorial here—see studio UI). **Do not** force them for wall posters, billboards, or arbitrary textured planes in navigable 3D tours; use `GUI_IMAGE`/`GUI_VIDEO`, `PRIMITIVE_*` with materials, `CUSTOM_3D_MODEL`, etc. Trust the editor default for images (`GUI_IMAGE` outside the narrow cases below). Omit `forceEntityType` unless [`assets-common.md`](references/assets/assets-common.md) applies (`PANORAMA`/`PANORAMA_180`, `GUI_VECTOR`, or rare explicit `FLAT_*` in a flat scene); never use `FLAT_*` as a generic fallback outside flat scenes.
 - **Actions — `CENTER_GPS`**: map action that requests browser geolocation at runtime and recenters the active map; it needs no target entity or payload beyond `type`/`eventType`. Read [actions.md](references/actions/actions.md#map) before adding it.
