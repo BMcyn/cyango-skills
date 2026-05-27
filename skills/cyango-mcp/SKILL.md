@@ -15,7 +15,7 @@ Helpful utility tools:
 - `validate_patch` — validate `propertyPath` and common GUI value mistakes before sending `update_entities`, `update_scene`, or `update_scenes`.
 - `instantiate_prefab` — instantiate an existing Studio prefab into a scene.
 
-Current MCP server write protocol is plural-only (v6): `insertAssets`, `addScenes`, `removeScenes`, `updateScenes`, `addEntities`, `removeEntities`, `updateEntities`. Do not rely on old single-write bridge commands such as `addEntity`, `removeEntity`, `addScene`, `removeScene`, `updateScene`, or `updateEntity`.
+Current MCP server write protocol is plural-only (v5): `insertAssets`, `addScenes`, `removeScenes`, `updateScenes`, `addEntities`, `removeEntities`, `updateEntities`. Do not rely on old single-write bridge commands such as `addEntity`, `removeEntity`, `addScene`, `removeScene`, `updateScene`, or `updateEntity`.
 
 ## Non-obvious rules
 
