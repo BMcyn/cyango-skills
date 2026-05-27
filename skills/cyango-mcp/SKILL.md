@@ -1,6 +1,6 @@
 ---
 name: cyango-mcp
-description: 'Cyango MCP: live editor via plural/batched tools. Use for scenes, GROUPs, GUI, 3D layout, actions, timelines, prefabs, navigation, bridge status/debugging, patch validation — or any Cyango MCP/bridge work. Infer from the ask even without "MCP". Batch writes, screen vs world GUI, breakpoints, schema-safe GUI values.'
+description: 'Cyango MCP: live editor via plural/batched tools. Use for scenes, GROUPs, GUI, 3D layout, actions, custom code actions, story Head/Footer code, timelines, prefabs, navigation, bridge status/debugging, patch validation — or any Cyango MCP/bridge work. Infer from the ask even without "MCP". Batch writes, screen vs world GUI, breakpoints, schema-safe GUI values.'
 ---
 
 **@cyango-tools/skills version:** `1.0.10`
@@ -31,6 +31,8 @@ Current MCP server write protocol is plural-only (v4): `addScenes`, `removeScene
 
 - **Desktop-first**: finish `desktop` first; `tablet`/`mobile` only when the user wants responsive. Breakpoints are override slots; runtime cascades per-property mobile→tablet→desktop. Tablet writes affect mobile inheritance — [gui-desktop-first.md](rules/gui-desktop-first.md).
 - **Batch writes (critical)**: use the fewest possible calls — batch by operation type (`add_entities` for entity creates, `remove_entities` for entity removals, `update_entities` for entity patches; `add_scenes`, `remove_scenes`, `update_scenes` for multi-scene work). Fragmented sequences cause editor instability — [batching-and-verification.md](rules/batching-and-verification.md).
+- **Actions — `CENTER_GPS`**: map action that requests browser geolocation at runtime and recenters the active map; it needs no target entity or payload beyond `type`/`eventType`. Read [actions.md](references/actions/actions.md#map) before adding it.
+- **Custom code has two separate surfaces**: `CUSTOM_CODE` actions go on entity/scene action arrays and receive the runtime `cyango` namespace; story Head/Footer code lives under story settings and does **not** receive `cyango`. Read [custom-code.md](references/custom-code.md) before writing either.
 - **Physics prerequisite**: if any entity in the change set has a `physics` block, ensure the scene has `physics.enabled: true` (and gravity set intentionally) via `update_scene` or `update_scenes` before validating. Entity-level physics does not simulate when scene physics is off.
 - **Render order**: use optional top-level `renderOrder` for draw-order fixes, not transform `z` or timeline `layer`. It is a finite number, higher values draw later within the same opaque/transparent pass, and children inherit a parent's effective render order unless they set their own. In Studio the control lives in the Visibility section; read [common.md](references/entities/common.md#render-order) before writing it.
 - **GUI — read [gui-properties.md](references/entities/gui/gui-properties.md) for every `GUI_*` in the change set**: check **[type defaults](references/entities/gui/gui-properties.md#type-defaults)** and field tables for every property you set or assume. MCP deep-merges `gui.currentValue`; unset keys still render via `GUI2D_*` JSX fallbacks — invisible in JSON/`get_entity`. Viewport ≠ JSON.
@@ -60,6 +62,7 @@ Every path is relative to this skill folder (`cyango-mcp/`).
 | [references/entities/common.md](references/entities/common.md) | **Open when touching any entity model data.** Source of truth for `IEntity` core fields, visibility, and family index. |
 | [references/scenes/scenes.md](references/scenes/scenes.md) | **Open before scene create/edit/navigation work.** Source of truth for `sceneType` and scene fields. |
 | [references/actions/actions.md](references/actions/actions.md) | **Open before adding/editing actions.** Source of truth for `IAction`, `ActionType`, `EventType`, conditions, and MCP patch shape. |
+| [references/custom-code.md](references/custom-code.md) | **Open before writing custom code.** Covers `CUSTOM_CODE` actions vs story Head/Footer code, runtime scope, MCP patch shapes, prefab bundling, and current MCP limitations. |
 | [references/timeline/timeline.md](references/timeline/timeline.md) | **Open before timeline/media/keyframe work.** Source of truth for `ITimeline`, `IAnimation`, keyframes, and `IMediaClip`. |
 
 ### Entity families (`references/entities/`)
