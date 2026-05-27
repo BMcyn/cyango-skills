@@ -91,6 +91,18 @@ Each object is one `IAction`. Combine `type` with the right companion fields (`t
 |------|-------------|--------|
 | `CAMERA_LOOK_AT` | Move the camera and orient it toward a target. | `lookAt` |
 
+### Map
+
+| Type | Description | Needs |
+|------|-------------|--------|
+| `CENTER_GPS` | Request the user's current browser geolocation and center the active map on that latitude/longitude. | No extra fields. Usually `eventType: ON_CLICK` or another explicit trigger. |
+
+Notes for `CENTER_GPS`:
+
+- Do **not** add `targetEntitiesIds`, `entityProperties`, or `conditions.geolocation` unless the user asked for unrelated targeting/conditions. `CENTER_GPS` gets the user's location at execution time via `navigator.geolocation`.
+- It depends on browser geolocation permission/support and on a mounted map recenter handler. Current runtime behavior uses the map recenter function registered by `Map2D`; if no recenter function is available, the action logs a warning and completes without moving the camera.
+- On GPS timeout, runtime retries once using cached geolocation (`maximumAge: Infinity`) before giving up.
+
 ### Timeline
 
 | Type | Description | Needs |
@@ -106,7 +118,7 @@ Each object is one `IAction`. Combine `type` with the right companion fields (`t
 | Type | Description | Needs |
 |------|-------------|--------|
 | `DELAY` | Wait for a duration before subsequent steps. | `duration` |
-| `CUSTOM_CODE` | Run custom code (e.g. backend execution). | `customCode` |
+| `CUSTOM_CODE` | Run sandboxed story-player code with a `customCode` payload. Use the custom-code reference from `SKILL.md`; do not infer syntax from this table alone. | `customCode` |
 | `OPEN_PRODUCT` | Open an XR store product. | — |
 | `INSTANTIATE_PREFAB` | Instantiate a prefab; `entityProperties` can act as overrides. | `prefabId` |
 | `NONE` | No operation. | — |
@@ -215,3 +227,4 @@ All clauses must match (AND semantics).
 1. **Navigate** — `type: GO_TO_SCENE`, `targetSceneId`, optional `sceneTransition`, `eventType: ON_CLICK`.
 2. **Toggle panels** — `SHOW_ENTITY` / `HIDE_ENTITY` on `targetEntitiesIds`, `eventType: ON_CLICK`.
 3. **Property change** — `CHANGE_ENTITY_PROPERTY`, `targetEntitiesIds`, `entityProperties` as update paths, `eventType` as needed.
+4. **Center map on user GPS** — `CENTER_GPS`, no extra payload, commonly `eventType: ON_CLICK` on a button/entity in a map scene.
