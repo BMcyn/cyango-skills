@@ -19,6 +19,18 @@ Every entity either sits at the scene root or is a child of another entity, cont
 
 Scene-root entities use world coordinates directly. Child entities use **local** coordinates — their position, rotation, and scale are all expressed relative to the parent, not the world origin.
 
+## Reparenting existing entities
+
+Use `update_entities` for reparenting after create:
+
+- **To scene root**: `propertyPath: "parentEntityId"`, `value: ""`.
+- **To another parent**: `propertyPath: "parentEntityId"`, `value: "<targetEntityId>"`.
+- **Batching**: put all reparent updates in one `update_entities` call.
+
+Do **not** patch `children` paths directly; hierarchy ownership should be driven by `parentEntityId` and reconciled by the editor reparent flow.
+
+Current Studio behavior keeps **local** transform values on reparent (position/rotation/scale stay as-is), so world pose may change.
+
 ## Transform inheritance and calculation
 
 All three transform components compose through the hierarchy:

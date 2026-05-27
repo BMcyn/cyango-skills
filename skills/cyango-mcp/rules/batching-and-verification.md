@@ -2,22 +2,24 @@
 
 Many separate create/remove/update operations can **crash the editor connection**. **Always** use batch tools:
 
-- **Entity writes**: `add_entities`, `remove_entities`, `update_entities`.
+- **Entity writes**: `add_entities`, `remove_entities`, `update_entities`, `insert_assets`.
 - **Scene writes**: `add_scenes`, `remove_scenes`, `update_scenes` for multi-scene work; `add_scene`, `remove_scene`, `update_scene` are one-scene convenience wrappers that still use batched bridge commands internally.
 
 The current MCP server bridge protocol is plural-only for writes (v4). Do not depend on old single-write bridge commands like `addEntity`, `removeEntity`, `addScene`, `removeScene`, `updateScene`, or `updateEntity`.
 
 ## Entity writes (required)
 
-- **Creates**: always **`add_entities`** — order parents before children; use `parentIndex` when the parent row is in the same batch.
+- **Creates**: always **`add_entities`** for new entities and **`insert_assets`** for asset-backed entities — order parents before children; use `parentIndex` when the parent row is in the same batch.
 - **Removals**: always **`remove_entities`** — pass every target `entityId` in one call when they belong to the same scene.
 - **Scenes**: use **`add_scene`** for one scene, **`add_scenes`** for multiple scenes in the same planned scene batch, **`remove_scenes`** for multi-scene removals, and **`update_scenes`** for scene patches across more than one scene.
 - **Entity property updates**: always **`update_entities`** — bundle every patch for the task into one call’s `updates` array (each patch can target different `entityIds`). Prefer setting layout and payloads via `overrides` on **`add_entities`** at create time so you need fewer follow-up updates.
+- **Reparenting existing entities**: use **`update_entities`** with `propertyPath: "parentEntityId"` (`value: ""` for root or target parent id string). Keep all reparent patches for the task in one batch call.
+- **Asset insertions**: use one **`insert_assets`** call for the full insertion wave. Rows may set `sceneId` each; optional top-level `sceneId` fills in rows that omit it. The MCP server forwards **one bridge `insertAssets` command per distinct scene** — still batch at the tool level, not as many separate MCP calls. Do not split one wave into many tiny calls.
 - **Scene property updates**: use **`update_scene`** for one scene, or **`update_scenes`** when different scene IDs/properties can be patched together.
 
 ## Verification (debugging only)
 
-`get_entity` and `list_entities` are **not** required after every write. Use them when you suspect a value did not apply, an entity is missing, or you are debugging layout. The MCP **`add_entities`** / **`remove_entities`** tools already re-check existence against the editor and report `verified` / `fallbackUsed` in the response — agent-level re-verification after every batch duplicates that and adds latency.
+`get_entity` and `list_entities` are **not** required after every write. Use them when you suspect a value did not apply, an entity is missing, or you are debugging layout. The MCP **`add_entities`** / **`remove_entities`** / **`insert_assets`** tools already re-check existence against the editor and report `verified` / `fallbackUsed` in the response — agent-level re-verification after every batch duplicates that and adds latency.
 
 `{"success": true}` from the bridge still only means the editor accepted the command; if something looks wrong in the viewport, that is when to read state.
 
@@ -68,6 +70,8 @@ Use the tables below only when you are investigating — not as a mandatory chec
 | Positional audio | `audio3D.currentValue.distance`, `rolloffFactor` match intent. |
 
 If a value did not stick, re-apply with a **single** **`update_entities`** call whose `updates` array contains the fix.
+
+Do not patch `children` paths directly; hierarchy should flow through `parentEntityId`.
 
 ## GUI on create
 

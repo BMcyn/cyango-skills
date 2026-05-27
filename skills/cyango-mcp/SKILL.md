@@ -15,12 +15,13 @@ Helpful utility tools:
 - `validate_patch` — validate `propertyPath` and common GUI value mistakes before sending `update_entities`, `update_scene`, or `update_scenes`.
 - `instantiate_prefab` — instantiate an existing Studio prefab into a scene.
 
-Current MCP server write protocol is plural-only (v4): `addScenes`, `removeScenes`, `updateScenes`, `addEntities`, `removeEntities`, `updateEntities`. Do not rely on old single-write bridge commands such as `addEntity`, `removeEntity`, `addScene`, `removeScene`, `updateScene`, or `updateEntity`.
+Current MCP server write protocol is plural-only (v6): `insertAssets`, `addScenes`, `removeScenes`, `updateScenes`, `addEntities`, `removeEntities`, `updateEntities`. Do not rely on old single-write bridge commands such as `addEntity`, `removeEntity`, `addScene`, `removeScene`, `updateScene`, or `updateEntity`.
 
 ## Non-obvious rules
 
 - **Primitives — scale, not geometry**: Studio canvas builds primitives from fixed Three.js args; `geometry.currentValue` fields (`radius`, `width`, etc.) are JSON/export metadata and do **not** resize the viewport mesh. Use `scale` to size. Read [primitives-common.md](references/entities/primitives/primitives-common.md) before assuming geometry fields affect what you see.
 - **World vs local**: roots = world space; children = **local** to parent — [hierarchy-and-coordinates.md](rules/hierarchy-and-coordinates.md).
+- **Reparent existing entities with `update_entities`**: set `propertyPath: "parentEntityId"` and `value: ""` for scene root, or set `value` to target parent entity id. Do not patch `children` paths directly.
 - **Entity roles**:
 
   | Entity | Role | Add manually? |
@@ -31,6 +32,8 @@ Current MCP server write protocol is plural-only (v4): `addScenes`, `removeScene
 
 - **Desktop-first**: finish `desktop` first; `tablet`/`mobile` only when the user wants responsive. Breakpoints are override slots; runtime cascades per-property mobile→tablet→desktop. Tablet writes affect mobile inheritance — [gui-desktop-first.md](rules/gui-desktop-first.md).
 - **Batch writes (critical)**: use the fewest possible calls — batch by operation type (`add_entities` for entity creates, `remove_entities` for entity removals, `update_entities` for entity patches; `add_scenes`, `remove_scenes`, `update_scenes` for multi-scene work). Fragmented sequences cause editor instability — [batching-and-verification.md](rules/batching-and-verification.md).
+- **Assets via MCP**: use `list_assets` to discover story/library assets, `insert_assets` to place existing assets, and `upload_assets` to import from `path`/`url`/`directory`. For library scope, pass `folderId`; for hierarchy in one insert batch use `parentIndex` like `add_entities`. `insert` on a multi-file upload applies the same transform to every asset; omit it and follow with `insert_assets` when per-asset placement matters, or one shared `insert` then `update_entities` per spawned entity for placement.
+- **`FLAT_IMAGE` / `FLAT_VIDEO` — flat scenes only**: these entity types belong **only inside flat scenes** (do not expand into a scene-type tutorial here—see studio UI). **Do not** force them for wall posters, billboards, or arbitrary textured planes in navigable 3D tours; use `GUI_IMAGE`/`GUI_VIDEO`, `PRIMITIVE_*` with materials, `CUSTOM_3D_MODEL`, etc. Trust the editor default for images (`GUI_IMAGE` outside the narrow cases below). Omit `forceEntityType` unless [`assets-common.md`](references/assets/assets-common.md) applies (`PANORAMA`/`PANORAMA_180`, `GUI_VECTOR`, or rare explicit `FLAT_*` in a flat scene); never use `FLAT_*` as a generic fallback outside flat scenes.
 - **Actions — `CENTER_GPS`**: map action that requests browser geolocation at runtime and recenters the active map; it needs no target entity or payload beyond `type`/`eventType`. Read [actions.md](references/actions/actions.md#map) before adding it.
 - **Custom code has two separate surfaces**: `CUSTOM_CODE` actions go on entity/scene action arrays and receive the runtime `cyango` namespace; story Head/Footer code lives under story settings and does **not** receive `cyango`. Read [custom-code.md](references/custom-code.md) before writing either.
 - **Physics prerequisite**: if any entity in the change set has a `physics` block, ensure the scene has `physics.enabled: true` (and gravity set intentionally) via `update_scene` or `update_scenes` before validating. Entity-level physics does not simulate when scene physics is off.
@@ -64,6 +67,7 @@ Every path is relative to this skill folder (`cyango-mcp/`).
 | [references/actions/actions.md](references/actions/actions.md) | **Open before adding/editing actions.** Source of truth for `IAction`, `ActionType`, `EventType`, conditions, and MCP patch shape. |
 | [references/custom-code.md](references/custom-code.md) | **Open before writing custom code.** Covers `CUSTOM_CODE` actions vs story Head/Footer code, runtime scope, MCP patch shapes, prefab bundling, and current MCP limitations. |
 | [references/timeline/timeline.md](references/timeline/timeline.md) | **Open before timeline/media/keyframe work.** Source of truth for `ITimeline`, `IAnimation`, keyframes, and `IMediaClip`. |
+| [references/assets/assets-common.md](references/assets/assets-common.md) | **Open before listing/inserting/importing assets.** Source of truth for MCP asset workflows and asset→entity mapping. |
 
 ### Entity families (`references/entities/`)
 
