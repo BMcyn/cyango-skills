@@ -65,6 +65,30 @@ Enum in `cyango-shared` — string values are the runtime tokens (e.g. `magic`, 
 
 ---
 
+## Scale: arbitrary authored units — models may appear invisible or giant
+
+GLB/glTF files have no enforced unit scale. A model exported in millimetres sits at `scale [1,1,1]` but is 0.001 m in world space — invisible from the default camera. One exported at 100 m swamps the entire scene.
+
+**"Fit new entities to unit box"** (canvas toolbar → Options → sliders icon) normalises the longest side of the bounding box to 1 m on insert. It is **off by default** and applies only to entities created after enabling it; MCP's `insert_assets` calls go through the same path, but the effect is suppressed when `scale` is explicitly passed in the insert.
+
+### How to handle invisible or scene-filling models
+
+1. **Call `get_entity`** on the root `CUSTOM_3D_MODEL` and inspect `scale.currentValue`.
+2. **Tell the user** the model may have been authored at a non-standard unit scale and that enabling "Fit new entities to unit box" (Options menu above the canvas) before re-inserting will normalise it automatically.
+3. **If asked to fix it now via MCP**, apply a corrective `update_entities` scale. Use human-scale reference: eye height ≈ 1.6 m, a medium car ≈ 4 m long. A reasonable starting scale for an unknown GLB is `[0.01, 0.01, 0.01]` (millimetre-origin) or `[100, 100, 100]` (kilometre-origin) — adjust based on context.
+4. **Do not silently pass `scale [1,1,1]`** when inserting unknown GLBs; omit `scale` entirely in `insert_assets` so the editor's own transform logic (including any user-enabled normalisation) can run first.
+
+### Reference scale
+
+| Object | Approximate world size |
+|--------|----------------------|
+| Human eye height | 1.6 m |
+| Medium car (length) | 4 m |
+| Room height | 2.5–3 m |
+| Default primitive cube | 1 × 1 × 1 m |
+
+---
+
 ## MCP paths
 
 - **Models**: `animations.currentValue`, `geometry.currentValue`, `material.currentValue`, `physics.currentValue`, `prefab`, transforms.

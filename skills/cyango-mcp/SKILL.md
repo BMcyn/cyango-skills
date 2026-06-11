@@ -16,7 +16,7 @@ Helpful utility tools:
 - `instantiate_prefab` — instantiate an existing Studio prefab into a scene.
 - `capture_screenshot` — use after visual edits to inspect the live result. Default `mode: "viewport"` captures the 3D canvas; `mode: "editor"` captures full editor UI. Use `shots` (max 6) for multiple angles.
 
-Current MCP server write protocol is plural-only (v6): `insertAssets`, `addScenes`, `removeScenes`, `updateScenes`, `addEntities`, `removeEntities`, `updateEntities`. Do not rely on old single-write bridge commands such as `addEntity`, `removeEntity`, `addScene`, `removeScene`, `updateScene`, or `updateEntity`.
+Current MCP server write protocol is plural-only (v5): `insertAssets`, `addScenes`, `removeScenes`, `updateScenes`, `addEntities`, `removeEntities`, `updateEntities`. Do not rely on old single-write bridge commands such as `addEntity`, `removeEntity`, `addScene`, `removeScene`, `updateScene`, or `updateEntity`.
 
 ## Non-obvious rules
 
@@ -44,6 +44,7 @@ Current MCP server write protocol is plural-only (v6): `insertAssets`, `addScene
   - "Button" = `GUI_CONTAINER` + `GUI_TEXT`; default `overflow: scroll` → spurious scrollbars unless `visible`; default container **150×150** → surprise width if you only set height.
   - World-space GUI scale stays identity: use `scale.currentValue: [1, 1, 1]`; size panels/buttons with GUI `width`/`height`, not tiny transform scales like `[0.004, 0.004, 0.004]`.
 - **Non-GUI types — read [non-gui-defaults.md](references/entities/non-gui-defaults.md) for every non-GUI entity in the change set**: check per-type creation defaults and the minimum-to-set table. MCP deep-merges creation defaults; unset keys are not written to story JSON and not visible in `get_entity`.
+- **`CUSTOM_3D_MODEL` scale — read [models-common.md](references/entities/models/models-common.md#scale-arbitrary-authored-units--models-may-appear-invisible-or-giant)**: GLBs have no enforced unit scale. **Do not pass `scale [1,1,1]` for unknown GLBs** — omit `scale` in `insert_assets` entirely. If a model looks invisible or fills the scene, check `scale.currentValue` via `get_entity` and tell the user the model was likely authored at non-standard units; offer to fix the scale or direct them to enable "Fit new entities to unit box" in the canvas Options menu.
 - **Schema-safe values**: only use values listed in [gui-properties.md](references/entities/gui/gui-properties.md) for GUI fields. Stray CSS keywords (`none`, `inherit`, …) can crash Yoga/uikit.
 - Reuse matching scenes/entities when possible.
 

@@ -10,6 +10,7 @@ Use this guide when working with editor assets through MCP.
   - both merged
 - `insert_assets` — insert one or many assets in one batched call. Each row may set `sceneId`; optional top-level `sceneId` is the fallback for rows that omit it, so **one call can target one or more scenes** (the MCP server sends one bridge `insertAssets` per distinct scene).
 - `upload_assets` — upload assets from a local path, URL, or directory through the editor upload pipeline. Returns uploaded asset IDs and can optionally chain a shared insert.
+- `remove_assets` — delete one or more library assets by ID. Returns structured outcomes: `deleted[]`, `blocked[]` (with scene/story names), or `partialFailures[]`. **Always surface `blocked[]` to the user. Never retry without the user first removing the asset from the named scenes or stories.**
 
 ## `list_assets` input
 
@@ -75,14 +76,11 @@ Use this guide when working with editor assets through MCP.
 
 ## Import workflow
 
-- MCP server reads bytes from `path`, fetches bytes from `url`, or expands supported files from `directory`.
-- MIME is inferred with `mime-types`; override with `mimeType` when needed.
-- Directory mode skips dot-files, subdirectories unless `recursive: true`, non-files, and unsupported types. Default-allowed: `image/*`, `model/*`, `video/*`, `audio/*`, `font/*`, plus known extras such as `.glb`, `.gltf`, `.hdr`, `.exr`, `.ktx2`, `.splat`, `.ply`.
-- Files stream to the editor as 256 KB raw chunks. The final chunk builds a browser `File` and `ICustomFile`, then reuses `uploadAssetFiles`.
-- Uploads use the editor session/auth and normal pipeline: presigned URL -> S3 PUT -> thumbnail processing -> `handleNewAsset`.
-- Long uploads send progress heartbeats (`assembled`, `presigned`, `s3`, `thumbnail`, `registering`) so the MCP bridge stays alive while progress continues. Silence over 30 seconds on `uploadAssetChunk` still times out.
-- Default upload folder name is `My Uploads`; pass `assetFolderId` to target a specific library folder.
-- Default per-file cap is 200 MB; directory default cap is 100 files.
+- MIME inferred from file extension; override with `mimeType` when needed.
+- Directory mode skips dot-files, subdirs (unless `recursive: true`), and unsupported types. Default-allowed: `image/*`, `model/*`, `video/*`, `audio/*`, `font/*`, plus `.glb`, `.gltf`, `.hdr`, `.exr`, `.ktx2`, `.splat`, `.ply`.
+- Large uploads take time and may timeout (30 s per chunk). Prefer smaller files when possible.
+- Default upload folder is `My Uploads`; pass `assetFolderId` to target a specific library folder.
+- Per-file cap: 200 MB. Directory cap: 100 files.
 
 ## Multi-file insert semantics
 
@@ -110,7 +108,7 @@ When assets need different placements:
 
 ## Asset category -> default entity type
 
-Entity inference comes from editor `setNewEntityType(asset, scene)`:
+Editor infers entity type from asset category:
 
 - `VIDEO` -> `PANORAMA_VIDEO` / `PANORAMA_180_VIDEO` / `FLAT_VIDEO` (flat scenes only) / `GUI_VIDEO`
 - `IMAGE` -> `PANORAMA` / `PANORAMA_180` / `FLAT_IMAGE` (flat scenes only) / `GUI_IMAGE`
@@ -156,3 +154,52 @@ If intent is ambiguous, ask rather than guessing — and never use `FLAT_IMAGE` 
 - Prefer one `insert_assets` call for the full insertion wave (all rows and scenes in one batch when practical), not repeated single-row inserts or redundant extra tool calls.
 - For parent-child chains within one batch, use `parentIndex` so parents can be referenced before IDs are known.
 - Avoid interleaving `add_entities` and `insert_assets` against the same target chain in separate calls.
+
+## `remove_assets` input
+
+```ts
+{
+  assetIds: string[] // min 1 — library asset IDs to delete
+}
+```
+
+## `remove_assets` response
+
+The tool always returns structured JSON. Blocked assets do **not** fail the call — read the fields below.
+
+```ts
+{
+  deletedCount: number,
+  deleted: string[],
+  blockedCount: number,
+  blocked: Array<{
+    assetId: string,
+    assetName?: string,
+    blockedBy: Array<{
+      type: "activeStory" | "story" | "prefab_or_bundle",
+      id?: string,           // story id (type=story)
+      name?: string,         // story name (type=story)
+      scenes?: Array<{ sceneId: string, sceneName: string }>,
+      note?: string,         // type=activeStory when attached but not placed in any scene
+      reason?: string        // type=prefab_or_bundle
+    }>
+  }>,
+  partialFailureCount: number,
+  partialFailures: Array<{ assetId: string, error: string }>,
+  allSucceeded: boolean      // true only when every requested asset is in deleted[]
+}
+```
+
+**How to read `blockedBy`:**
+
+| `type` | Meaning | Tell the user |
+|--------|---------|---------------|
+| `activeStory` | Asset is attached to the **open** story | Scene names in `scenes[]`; if empty, `note` explains it's attached but unplaced |
+| `story` | Asset is used in **another** story | Story `name`; scene names in `scenes[]` when present |
+| `prefab_or_bundle` | Asset is locked by a prefab or published bundle | `reason` message |
+
+**Agent rules:**
+- Use **`allSucceeded`** to judge the whole batch. Mixed batches are normal — some in `deleted[]`, others in `blocked[]`.
+- If an asset is in the open story, you see `activeStory` only (not other stories that may also reference it).
+- **`partialFailures`** are real errors (not found, network, etc.) — distinct from `blocked`.
+- Always tell the user which scenes or stories are blocking. Never silently skip a blocked asset.
